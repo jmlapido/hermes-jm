@@ -44,6 +44,14 @@ Create these **before** `terraform apply`, because cloud-init reads them on firs
 | `/hermes/env/PROXMOX_HOST` | e.g. `https://pve.tailnet-name.ts.net:8006` |
 | `/hermes/env/PROXMOX_TOKEN_ID` | e.g. `hermes@pve!agent` |
 | `/hermes/env/PROXMOX_TOKEN_SECRET` | Proxmox API token secret |
+| `/hermes/env/LIBRENMS_URL` | e.g. `https://nms.tailnet-name.ts.net` |
+| `/hermes/env/LIBRENMS_TOKEN` | LibreNMS read-only API token |
+| `/hermes/env/HERMES_TIMEZONE` | `Asia/Dubai` (one timezone for all cron jobs) |
+| `/hermes/env/DISCORD_HOME_CHANNEL` | Optional: default channel for deliveries |
+| `/hermes/env/EMAIL_IMAP_PORT` / `EMAIL_SMTP_PORT` | Optional: defaults 993 / 587 |
+| `/hermes/env/PROXMOX_CA_FILE` | Optional: path to Proxmox CA cert (else TLS is not verified) |
+
+See `docs/RUNBOOK.md` for the full table. Microsoft 365 no longer allows app passwords for IMAP/SMTP; use OAuth2 there.
 
 Every parameter under `/hermes/env/` becomes `KEY=value` in `/home/hermes/.hermes/.env`. To add more keys, create new parameters there. Check the exact variable names Hermes expects against its docs.
 

@@ -1,0 +1,44 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+*.tfplan
+tfplan
+.terraform.lock.hcl.bak
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Secrets / env
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# Runtime state written by skills
+state/
+sites.json
+sites.txt
+*.state.json
+
+# Downloads / build artifacts
+*.whl
+*.tar.gz
+*.zip
+node_modules/
+
+# OS / editor
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
