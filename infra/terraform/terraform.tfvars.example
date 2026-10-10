@@ -1,0 +1,8 @@
+# Copy to terraform.tfvars and edit. terraform.tfvars is git-ignored.
+region             = "ap-southeast-1"
+instance_type      = "t4g.medium"
+tailscale_hostname = "hermes-aws"
+monthly_budget_usd = 50
+budget_alert_email = "you@example.com"
+# snapshot_retain_count = 7
+# root_volume_size_gb   = 40
