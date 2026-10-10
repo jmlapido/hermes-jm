@@ -37,11 +37,13 @@ JM-specific policy layer on top of Hermes' bundled email skills:
 
 - **Gmail / Google Workspace**: enable 2-Step Verification, create an App Password,
   IMAP `imap.gmail.com:993`, SMTP `smtp.gmail.com:587`. Labels map to IMAP folders.
-- **Microsoft 365**: Exchange Online has retired basic auth for IMAP/SMTP, so an app
-  password usually will not work. Use OAuth2 (himalaya supports `auth.type = "oauth2"`
-  with an Entra ID app registration, delegated `IMAP.AccessAsUser.All` +
-  `SMTP.Send`, refresh token stored in `~/.hermes/.env`), or a Graph-based connector.
-  Confirm with JM which tenant/policy applies before setting up.
+- **Microsoft 365 (JM's choice: Microsoft Graph via self-hosted MCP)**: use the `m365`
+  MCP server (`mcp_m365_*` tools, Softeria `ms-365-mcp-server`, own Entra app, delegated
+  device-code login). Setup is in `docs/M365-GRAPH.md`. Do **not** use himalaya/IMAP for
+  M365. The app has no `Mail.Send` consent, so for M365 "send" means: leave the draft in
+  Outlook Drafts and tell JM it is ready to send. Categorise/move with Outlook categories
+  and folders (`Hermes/FYI`, `Hermes/Newsletter`, `Hermes/Spam-suspect`). The `EMAIL_*`
+  variables above are only needed for the Gmail/IMAP mailbox.
 
 ### himalaya config (`~/.config/himalaya/config.toml`, mode 600)
 
@@ -132,8 +134,9 @@ Replies awaiting approval: e12, e13, e14 - reply "send e12" / "edit e12: ..." / 
 
 ## Approval handling
 
-- `send <id>` - send exactly the stored draft (re-show recipient + subject in the
-  confirmation message after sending).
+- `send <id>` - Gmail: send exactly the stored draft, then re-show recipient + subject
+  in the confirmation. M365: no send permission by design; reply that the draft is in
+  Outlook Drafts, ready for JM to send.
 - `edit <id>: <instructions>` - revise the draft, post the new preview, wait again.
 - `drop <id>` - delete the draft only (not the original email).
 - `delete <id>` - move the original to Trash (not permanent) - only on this explicit command.

@@ -61,7 +61,10 @@ Create all as `SecureString` in `ap-southeast-1`. Everything under `/hermes/env/
 | `/hermes/env/EMAIL_SMTP_HOST` | 3 | `smtp.gmail.com` / `smtp.office365.com` |
 | `/hermes/env/EMAIL_SMTP_PORT` | 3 | `587` |
 | `/hermes/env/EMAIL_USER` | 3 | mailbox login |
-| `/hermes/env/EMAIL_APP_PASSWORD` | 3 | Gmail app password (M365: OAuth2, see `skills/email-triage/SKILL.md`) |
+| `/hermes/env/EMAIL_APP_PASSWORD` | 3 | Gmail app password (M365 uses Graph instead, see `docs/M365-GRAPH.md`) |
+| `/hermes/env/MS365_MCP_CLIENT_ID` | 3 | Entra app (client) ID, see `docs/M365-GRAPH.md` |
+| `/hermes/env/MS365_MCP_TENANT_ID` | 3 | Entra tenant ID |
+| `/hermes/env/MS365_MCP_TOKEN_CACHE_PATH` | 3 | `/home/hermes/.hermes/ms365/token-cache.json` |
 | `/hermes/env/EMAIL2_*` | 3 | optional second mailbox, same keys with `EMAIL2_` prefix |
 | `/hermes/env/SSL_WARN_DAYS` | 3 | optional, default 14 |
 
@@ -170,7 +173,11 @@ chmod +x ~/.hermes/scripts/site-alerts.sh
 ```
 
 ### 3.2 Email
-Configure himalaya per `skills/email-triage/SKILL.md` (`~/.config/himalaya/config.toml`,
+**Microsoft 365:** follow `docs/M365-GRAPH.md` (Entra app without `Mail.Send`, device-code
+login, `m365` MCP server). For the M365 cron jobs below, use the MCP tools instead of
+`--skill himalaya`.
+
+**Gmail / IMAP:** configure himalaya per `skills/email-triage/SKILL.md` (`~/.config/himalaya/config.toml`,
 mode 600), put `EMAIL_*` in SSM, restart the gateway, then in `#email`: "triage my inbox
 now, don't change anything". Create Gmail labels / folders `Hermes/FYI`,
 `Hermes/Newsletter`, `Hermes/Spam-suspect` (or let the first run create them).
@@ -313,7 +320,7 @@ PVE host, and/or remove `tag:hermes` grants in the Tailscale ACL.
 | Cron jobs not firing | `hermes cron status` (stale gateway code -> restart), `hermes cron list`, output in `~/.hermes/cron/output/` |
 | Wrong cron time | `hermes config get timezone` / `HERMES_TIMEZONE`; `hermes doctor` flags bad TZ names |
 | No site alerts ever | run `~/.hermes/scripts/site-alerts.sh` by hand; delete `~/.hermes/state/sites.json` to reset state |
-| Email auth fails | Gmail: app password + IMAP enabled; M365: basic auth disabled -> OAuth2 |
+| Email auth fails | Gmail: app password + IMAP enabled; M365: re-run `ms-365-mcp-server --org-mode --login`, check Conditional Access (device code flow) |
 | High LLM spend | `hermes cron list` (frequency), set `cron.model` to a cheaper model, make email-triage `[SILENT]` when idle |
 | Disk full | `df -h`, `docker system prune`, rotate `~/.hermes/logs`, `career-ops/output` |
 | Memory pressure | `free -m`, `journalctl -k | grep -i oom` -> consider t4g.large |

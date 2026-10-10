@@ -123,7 +123,7 @@ Paperclip itself is better on its own host or the homelab (Phase 4).
   separation, permissions only on pool `agent-pool` (`proxmox/setup-hermes-user.sh`);
   `proxmox/revoke-hermes-user.sh` is the kill switch.
 - LibreNMS: read-only API user/token.
-- Email: app password or OAuth2 refresh token scoped to one mailbox; never the main password.
+- Email: Gmail app password; M365 via own Entra app, delegated token for JM's mailbox only, no `Mail.Send` consent (`docs/M365-GRAPH.md`). Never the main password.
 - Discord: bot only in JM's private server; `DISCORD_ALLOWED_USERS` allowlist so nobody
   else can command it; minimal bot permissions.
 - All tokens rotatable without redeploying (update SSM -> restart gateway). See RUNBOOK.

@@ -27,7 +27,7 @@ skills/       Hermes skills (SKILL.md + helper scripts)
   proxmox-manage/    pve.sh - PVE API: list, create-ct, start/stop, snapshot, guarded destroy
   nms-report/        nms.sh - LibreNMS: down devices, alerts, port errors, daily report
   site-monitor/      check_sites.sh - HTTP/TLS/DNS checks, alerts on state change
-  email-triage/      IMAP/Gmail triage, digest, approval-gated replies
+  email-triage/      Gmail (IMAP) + M365 (Graph MCP) triage, digest, approval-gated replies
   career-ops-daily/  daily job scan + scoring + tailored drafts via santifer/career-ops
 docs/
   ARCHITECTURE.md    diagram, sizing, security guardrails

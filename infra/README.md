@@ -51,7 +51,7 @@ Create these **before** `terraform apply`, because cloud-init reads them on firs
 | `/hermes/env/EMAIL_IMAP_PORT` / `EMAIL_SMTP_PORT` | Optional: defaults 993 / 587 |
 | `/hermes/env/PROXMOX_CA_FILE` | Optional: path to Proxmox CA cert (else TLS is not verified) |
 
-See `docs/RUNBOOK.md` for the full table. Microsoft 365 no longer allows app passwords for IMAP/SMTP; use OAuth2 there.
+See `docs/RUNBOOK.md` for the full table. Microsoft 365 uses Microsoft Graph through a self-hosted MCP server instead (`MS365_MCP_*` params). See `docs/M365-GRAPH.md`.
 
 Every parameter under `/hermes/env/` becomes `KEY=value` in `/home/hermes/.hermes/.env`. To add more keys, create new parameters there. Check the exact variable names Hermes expects against its docs.
 
