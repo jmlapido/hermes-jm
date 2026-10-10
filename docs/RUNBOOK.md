@@ -247,6 +247,9 @@ You can also create these by chatting ("every weekday at 8 Dubai time run the
 career-ops brief and post it in #career"); Hermes calls its `cronjob` tool. Use a cheaper
 model for cron (`hermes config set cron.model <model>`) to control spend.
 
+### 3.5 Dashboards (optional)
+Homepage NOC, Open WebUI and the Hermes admin dashboard (all tailnet-only): see [DASHBOARDS.md](DASHBOARDS.md).
+
 ## Phase 4 - Paperclip AI integration (later)
 
 [Paperclip](https://github.com/paperclipai/paperclip) is an orchestration/control plane

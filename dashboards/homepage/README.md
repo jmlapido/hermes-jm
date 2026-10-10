@@ -47,8 +47,9 @@ tailscale up --hostname homepage        # tag it in the admin console per tailsc
 ```
 
 The Tailscale ACL must let this node reach pve01:8006, the LibreNMS and Uptime Kuma CTs
-(directly or through the subnet router), and `hermes-aws` ports 8642 and the dashboard
-and Open WebUI ports.
+(directly or through the subnet router), and `hermes-aws` on 443 (Open WebUI), 8443 (admin
+dashboard) and 9443 (`/health` only). Tag this CT `tag:homepage`; `tailscale/acl.hujson` grants
+exactly those ports. The agent API port 8642 stays on the EC2's loopback and is never exposed.
 
 ## 3. Proxmox: a separate read-only token
 

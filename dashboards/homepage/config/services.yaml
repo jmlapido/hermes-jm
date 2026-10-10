@@ -80,7 +80,7 @@
     - Hermes API:
         icon: mdi-robot-outline
         href: "{{HOMEPAGE_VAR_HERMES_DASHBOARD_URL}}"
-        description: Agent API /health on hermes-aws:8642
+        description: Agent API /health via tailscale serve :9443
         # Green dot when /health answers 2xx. Hermes also posts alerts to Discord.
         siteMonitor: "{{HOMEPAGE_VAR_HERMES_HEALTH_URL}}"
 

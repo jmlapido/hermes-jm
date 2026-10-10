@@ -1,12 +1,14 @@
 // Tailscale policy for Hermes Agent (AWS EC2) managing a Proxmox VE home lab.
 // Paste into Admin console > Access controls. Default deny: anything not
-// granted below is blocked. Nothing grants access *to* tag:hermes except admins.
+// granted below is blocked. Access *to* tag:hermes: admins (everything) and the Homepage
+// NOC CT (tag:homepage) on the three tailscale-serve ports only (dashboards/tailscale-serve.sh).
 {
 	"tagOwners": {
 		"tag:hermes":        ["autogroup:admin"], // Hermes Agent EC2 instance
 		"tag:proxmox":       ["autogroup:admin"], // PVE host
 		"tag:nms":           ["autogroup:admin"], // LibreNMS CT
 		"tag:subnet-router": ["autogroup:admin"], // CT advertising the home LAN
+		"tag:homepage":      ["autogroup:admin"], // Homepage NOC CT (dashboards/homepage)
 	},
 
 	"grants": [
@@ -33,6 +35,25 @@
 			"src": ["tag:hermes"],
 			"dst": ["192.168.1.0/24"],
 			"ip":  ["icmp:*", "tcp:22", "tcp:80", "tcp:443", "udp:161"],
+		},
+		// Homepage NOC -> Hermes via tailscale serve only: Open WebUI (443), Hermes
+		// dashboard (8443), API /health (9443). Never the raw API port 8642, never SSH.
+		// Both UIs require their own login; the tiles only check that they answer.
+		{
+			"src": ["tag:homepage"],
+			"dst": ["tag:hermes"],
+			"ip":  ["tcp:443", "tcp:8443", "tcp:9443"],
+		},
+		// Homepage NOC -> Proxmox API (read-only PVEAuditor token) and LibreNMS API.
+		{
+			"src": ["tag:homepage"],
+			"dst": ["tag:proxmox"],
+			"ip":  ["tcp:8006"],
+		},
+		{
+			"src": ["tag:homepage"],
+			"dst": ["tag:nms"],
+			"ip":  ["tcp:443", "tcp:80"],
 		},
 	],
 
@@ -61,7 +82,12 @@
 		{
 			// Managed nodes must not be able to reach Hermes.
 			"src":  "tag:proxmox",
-			"deny": ["tag:hermes:22", "tag:hermes:443"],
+			"deny": ["tag:hermes:22", "tag:hermes:443", "tag:hermes:8443", "tag:hermes:9443"],
+		},
+		{
+			"src":    "tag:homepage",
+			"accept": ["tag:hermes:443", "tag:hermes:8443", "tag:hermes:9443", "tag:proxmox:8006", "tag:nms:443"],
+			"deny":   ["tag:hermes:8642", "tag:hermes:22", "tag:proxmox:22"],
 		},
 	],
 }

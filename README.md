@@ -32,6 +32,7 @@ skills/       Hermes skills (SKILL.md + helper scripts)
 docs/
   ARCHITECTURE.md    diagram, sizing, security guardrails
   RUNBOOK.md         phased rollout, SSM params, cron jobs, rotation, backup, troubleshooting
+  DASHBOARDS.md      Homepage NOC, Open WebUI chat, Hermes admin dashboard, Discord: setup + customizing
 ```
 
 ## Quickstart
