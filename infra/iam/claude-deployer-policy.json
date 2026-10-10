@@ -1,0 +1,86 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "Identity",
+      "Effect": "Allow",
+      "Action": ["sts:GetCallerIdentity"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "Ec2InSingaporeOnly",
+      "Effect": "Allow",
+      "Action": "ec2:*",
+      "Resource": "*",
+      "Condition": { "StringEquals": { "aws:RequestedRegion": "ap-southeast-1" } }
+    },
+    {
+      "Sid": "HermesRolesOnly",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole", "iam:DeleteRole", "iam:GetRole", "iam:TagRole", "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy", "iam:ListRolePolicies", "iam:ListAttachedRolePolicies",
+        "iam:PutRolePolicy", "iam:GetRolePolicy", "iam:DeleteRolePolicy",
+        "iam:AttachRolePolicy", "iam:DetachRolePolicy", "iam:PassRole",
+        "iam:ListInstanceProfilesForRole",
+        "iam:CreateInstanceProfile", "iam:DeleteInstanceProfile", "iam:GetInstanceProfile",
+        "iam:AddRoleToInstanceProfile", "iam:RemoveRoleFromInstanceProfile",
+        "iam:TagInstanceProfile"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/hermes-agent-*",
+        "arn:aws:iam::*:instance-profile/hermes-agent-*"
+      ]
+    },
+    {
+      "Sid": "SnapshotsAndBudget",
+      "Effect": "Allow",
+      "Action": ["dlm:*", "budgets:*"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "WriteHermesParamsButNeverReadThem",
+      "Effect": "Allow",
+      "Action": ["ssm:PutParameter", "ssm:DeleteParameter", "ssm:AddTagsToResource"],
+      "Resource": "arn:aws:ssm:ap-southeast-1:*:parameter/hermes/*"
+    },
+    {
+      "Sid": "ListParamNames",
+      "Effect": "Allow",
+      "Action": ["ssm:DescribeParameters"],
+      "Resource": "*"
+    },
+    {
+      "Sid": "RunCommandOnHermesOnly",
+      "Effect": "Allow",
+      "Action": ["ssm:SendCommand"],
+      "Resource": "arn:aws:ec2:ap-southeast-1:*:instance/*",
+      "Condition": { "StringEquals": { "ssm:resourceTag/Name": "hermes-agent" } }
+    },
+    {
+      "Sid": "RunCommandDocument",
+      "Effect": "Allow",
+      "Action": ["ssm:SendCommand"],
+      "Resource": "arn:aws:ssm:ap-southeast-1::document/AWS-RunShellScript"
+    },
+    {
+      "Sid": "RunCommandResults",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetCommandInvocation", "ssm:ListCommandInvocations", "ssm:ListCommands",
+        "ssm:DescribeInstanceInformation", "ssm:CancelCommand"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TerraformStateBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket", "s3:ListBucket", "s3:GetObject", "s3:PutObject", "s3:DeleteObject",
+        "s3:GetBucketVersioning", "s3:PutBucketVersioning",
+        "s3:PutBucketPublicAccessBlock", "s3:PutEncryptionConfiguration"
+      ],
+      "Resource": ["arn:aws:s3:::hermes-jm-tfstate-*", "arn:aws:s3:::hermes-jm-tfstate-*/*"]
+    }
+  ]
+}

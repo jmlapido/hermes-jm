@@ -16,6 +16,8 @@ Infrastructure, skills and runbooks for running [Hermes Agent](https://github.co
   - Daily UAE/GCC IT-leadership job search via career-ops: drafts only, JM applies.
   - Later: Paperclip AI as the control plane.
 
+**Start here:** [docs/SETUP-GUIDE.md](docs/SETUP-GUIDE.md) is the complete step-by-step setup, with each step marked YOU or CLAUDE.
+
 ## Repository layout
 
 ```text

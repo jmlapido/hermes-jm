@@ -3,6 +3,7 @@
 End-to-end rollout and day-2 operations for Hermes Agent on AWS EC2 (Singapore),
 managing the Philippines business network + Proxmox homelab, email, and the job search,
 with Discord as the control surface. Architecture and guardrails: [ARCHITECTURE.md](ARCHITECTURE.md).
+For first-time setup in order, follow [SETUP-GUIDE.md](SETUP-GUIDE.md); this runbook holds the details.
 
 Conventions: run AWS CLI commands from your workstation with `R=ap-southeast-1`.
 "On the box" means `tailscale ssh hermes@hermes-aws` (or SSM Session Manager, then
