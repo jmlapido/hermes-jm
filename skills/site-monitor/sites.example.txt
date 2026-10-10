@@ -1,0 +1,13 @@
+# site-monitor list - copy to ~/.hermes/sites.txt and edit.
+# Format: <url> [expected_status_regex]
+# Default expectation is any 2xx/3xx (redirects are followed, final status is checked).
+# Internal (tailnet) URLs work too: the EC2 host resolves them via MagicDNS.
+
+https://www.example-business.ph
+https://shop.example-business.ph
+https://mail.example-business.ph/owa/   ^(200|302)$
+https://vpn.example-business.ph         ^(200|401|403)$
+
+# Homelab services via tailnet
+https://pve.tailnet:8006                ^200$
+http://librenms.tailnet/login

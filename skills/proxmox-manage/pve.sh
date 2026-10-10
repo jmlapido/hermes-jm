@@ -4,6 +4,7 @@
 # Auth: API token (hermes@pve!agent), scoped to pool `agent-pool`.
 # Required env:
 #   PROXMOX_URL           e.g. https://pve.tailnet:8006/api2/json
+#                         (PROXMOX_HOST=https://pve.tailnet:8006 also accepted; /api2/json is appended)
 #   PROXMOX_TOKEN_ID      e.g. hermes@pve!agent
 #   PROXMOX_TOKEN_SECRET  UUID secret
 # Optional env:
@@ -49,10 +50,13 @@ need() { command -v "$1" >/dev/null 2>&1 || die "missing dependency: $1"; }
 need curl
 need jq
 
-: "${PROXMOX_URL:?PROXMOX_URL not set (e.g. https://pve.tailnet:8006/api2/json)}"
+# Accept PROXMOX_URL (preferred) or PROXMOX_HOST (https://host:8006, as in infra/README.md).
+PROXMOX_URL="${PROXMOX_URL:-${PROXMOX_HOST:-}}"
+[[ -n "$PROXMOX_URL" ]] || die "PROXMOX_URL (or PROXMOX_HOST) not set (e.g. https://pve.tailnet:8006/api2/json)"
 : "${PROXMOX_TOKEN_ID:?PROXMOX_TOKEN_ID not set}"
 : "${PROXMOX_TOKEN_SECRET:?PROXMOX_TOKEN_SECRET not set}"
 PROXMOX_URL="${PROXMOX_URL%/}"
+[[ "$PROXMOX_URL" == */api2/json ]] || PROXMOX_URL="${PROXMOX_URL}/api2/json"
 
 CURL_TLS=()
 if [[ -n "${PROXMOX_CA_FILE:-}" ]]; then

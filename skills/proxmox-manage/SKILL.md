@@ -11,7 +11,7 @@ metadata:
     related_skills: [nms-report, site-monitor]
 required_environment_variables:
   - name: PROXMOX_URL
-    prompt: Proxmox API base URL (e.g. https://pve.tailnet:8006/api2/json)
+    prompt: Proxmox API base URL (e.g. https://pve.tailnet:8006/api2/json; PROXMOX_HOST also accepted)
     required_for: all commands
   - name: PROXMOX_TOKEN_ID
     prompt: Proxmox API token id (hermes@pve!agent)
@@ -29,7 +29,7 @@ API token `hermes@pve!agent`. The token's permissions are limited to pool
 anything outside it; this skill adds a second layer of guardrails on top.
 
 Helper: `pve.sh` in this skill's directory (`~/.hermes/skills/proxmox-manage/pve.sh`).
-It needs `curl` and `jq`, and reads `PROXMOX_URL`, `PROXMOX_TOKEN_ID`,
+It needs `curl` and `jq`, and reads `PROXMOX_URL` (or `PROXMOX_HOST` = `https://host:8006`; `/api2/json` is appended if missing), `PROXMOX_TOKEN_ID`,
 `PROXMOX_TOKEN_SECRET`, optional `PROXMOX_CA_FILE` (pin the PVE CA; without it TLS
 verification is skipped and a warning is printed), optional `PROXMOX_SSH_PUBKEYS`
 (authorized_keys file for new CTs) and `PROXMOX_POOL` (default `agent-pool`).
