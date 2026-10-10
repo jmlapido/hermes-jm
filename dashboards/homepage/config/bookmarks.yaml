@@ -1,0 +1,23 @@
+---
+# https://gethomepage.dev/configs/bookmarks/
+- Links:
+    - AWS Console:
+        - icon: si-amazonwebservices
+          href: "https://ap-southeast-1.console.aws.amazon.com/ec2/home?region=ap-southeast-1#Instances:"
+          description: EC2 - ap-southeast-1
+    - Entra Admin:
+        - icon: si-microsoft
+          href: https://entra.microsoft.com/
+          description: Microsoft Entra admin center
+    - Tailscale Admin:
+        - icon: tailscale.svg
+          href: https://login.tailscale.com/admin/machines
+          description: Machines, ACLs, keys
+    - GitHub hermes-jm:
+        - icon: si-github
+          href: https://github.com/jmlapido/hermes-jm
+          description: jmlapido/hermes-jm
+    - Discord:
+        - icon: si-discord
+          href: https://discord.com/channels/@me
+          description: Hermes ops server

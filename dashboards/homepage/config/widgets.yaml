@@ -1,0 +1,29 @@
+---
+# Info widgets in the header. https://gethomepage.dev/widgets/
+# resources = this Homepage CT's own CPU/RAM/disk (not pve01; that is the Proxmox card).
+- resources:
+    label: homepage CT
+    cpu: true
+    memory: true
+    disk: /
+    uptime: true
+
+# Browser local time is already UAE; show the homelab's clock.
+- datetime:
+    text_size: xl
+    locale: en-GB
+    format:
+      timeZone: Asia/Manila
+      timeZoneName: short
+      weekday: short
+      day: numeric
+      month: short
+      hour: 2-digit
+      minute: 2-digit
+      hourCycle: h23
+
+- search:
+    provider: [duckduckgo, google]
+    focus: true
+    showSearchSuggestions: true
+    target: _blank

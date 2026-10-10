@@ -1,0 +1,97 @@
+---
+# https://gethomepage.dev/configs/services/
+# Secrets and per-site URLs come from .env as {{HOMEPAGE_VAR_*}}.
+# Icons: names from https://github.com/homarr-labs/dashboard-icons,
+# or mdi-xxx / si-xxx / sh-xxx.
+
+- Infrastructure:
+    - Proxmox VE:
+        icon: proxmox.svg
+        href: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+        description: pve01 - PH homelab
+        siteMonitor: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+        widget:
+          type: proxmox
+          url: "{{HOMEPAGE_VAR_PROXMOX_URL}}"
+          username: "{{HOMEPAGE_VAR_PROXMOX_TOKEN_ID}}"      # user@realm!tokenid, read-only token
+          password: "{{HOMEPAGE_VAR_PROXMOX_TOKEN_SECRET}}"
+          node: "{{HOMEPAGE_VAR_PROXMOX_NODE}}"
+          # fields: ["vms", "lxc", "resources.cpu", "resources.mem"]
+
+- Network:
+    # Homepage has no native LibreNMS widget; these are customapi calls to the
+    # LibreNMS REST API (same endpoints the nms-report skill uses).
+    - LibreNMS:
+        icon: librenms.svg
+        href: "{{HOMEPAGE_VAR_LIBRENMS_URL}}"
+        description: SNMP monitoring - PH network
+        siteMonitor: "{{HOMEPAGE_VAR_LIBRENMS_URL}}"
+        widgets:
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_LIBRENMS_URL}}/api/v0/devices"
+            refreshInterval: 60000
+            headers:
+              X-Auth-Token: "{{HOMEPAGE_VAR_LIBRENMS_KEY}}"
+            mappings:
+              - field: count
+                label: Devices
+                format: number
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_LIBRENMS_URL}}/api/v0/devices?type=down"
+            refreshInterval: 60000
+            headers:
+              X-Auth-Token: "{{HOMEPAGE_VAR_LIBRENMS_KEY}}"
+            mappings:
+              - field: count
+                label: Down
+                format: number
+          - type: customapi
+            url: "{{HOMEPAGE_VAR_LIBRENMS_URL}}/api/v0/alerts?state=1"
+            refreshInterval: 60000
+            headers:
+              X-Auth-Token: "{{HOMEPAGE_VAR_LIBRENMS_KEY}}"
+            mappings:
+              - field: count
+                label: Active alerts
+                format: number
+
+    - Tailscale (hermes-aws):
+        icon: tailscale.svg
+        href: https://login.tailscale.com/admin/machines
+        description: Hermes EC2 node on the tailnet
+        widget:
+          type: tailscale
+          deviceid: "{{HOMEPAGE_VAR_TAILSCALE_DEVICE_ID}}"
+          key: "{{HOMEPAGE_VAR_TAILSCALE_KEY}}"
+          fields: ["address", "last_seen", "expires", "update_available"]
+
+- Websites:
+    - Uptime Kuma:
+        icon: uptime-kuma.svg
+        href: "{{HOMEPAGE_VAR_UPTIMEKUMA_URL}}/status/{{HOMEPAGE_VAR_UPTIMEKUMA_SLUG}}"
+        description: Website uptime - status page "sites"
+        widget:
+          type: uptimekuma
+          url: "{{HOMEPAGE_VAR_UPTIMEKUMA_URL}}"
+          slug: "{{HOMEPAGE_VAR_UPTIMEKUMA_SLUG}}"
+          # fields: ["up", "down", "uptime", "incident"]
+
+- Hermes:
+    - Hermes API:
+        icon: mdi-robot-outline
+        href: "{{HOMEPAGE_VAR_HERMES_DASHBOARD_URL}}"
+        description: Agent API /health on hermes-aws:8642
+        # Green dot when /health answers 2xx. Hermes also posts alerts to Discord.
+        siteMonitor: "{{HOMEPAGE_VAR_HERMES_HEALTH_URL}}"
+
+    - Hermes Dashboard:
+        icon: mdi-view-dashboard-outline
+        href: "{{HOMEPAGE_VAR_HERMES_DASHBOARD_URL}}"
+        description: Admin dashboard (tailnet only)
+        siteMonitor: "{{HOMEPAGE_VAR_HERMES_DASHBOARD_URL}}"
+
+    - Open WebUI:
+        icon: open-webui.svg
+        href: "{{HOMEPAGE_VAR_OPENWEBUI_URL}}"
+        description: Chat UI for Hermes (tailnet only)
+        siteMonitor: "{{HOMEPAGE_VAR_OPENWEBUI_URL}}"

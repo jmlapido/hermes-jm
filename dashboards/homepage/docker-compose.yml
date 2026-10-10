@@ -1,0 +1,40 @@
+# Homepage (https://gethomepage.dev) - JM Ops NOC dashboard.
+# Runs in its own Proxmox LXC (Debian 12 + Docker). Reachable only over the
+# tailnet: the container listens on 127.0.0.1:3000 and `tailscale serve`
+# publishes it as https://homepage.<tailnet>.ts.net. See README.md.
+#
+# Image is pinned. v2.4.0 was the newest release tag when this was written
+# (2026-10). To upgrade: check https://github.com/gethomepage/homepage/releases,
+# read the notes for breaking config changes, bump the tag, then
+#   docker compose pull && docker compose up -d
+#
+# No /var/run/docker.sock mount on purpose: read-only or not, the socket gives
+# root-equivalent control of the Docker host (it can start a privileged
+# container that mounts /). This CT only runs Homepage, so Docker
+# auto-discovery adds nothing. If you ever need container status, run a
+# socket proxy (e.g. tecnativa/docker-socket-proxy with CONTAINERS=1 only)
+# and point docker.yaml at it instead of mounting the socket.
+services:
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.4.0
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"   # loopback only; tailscale serve is the front door
+    volumes:
+      - ./config:/app/config
+    env_file: .env              # HOMEPAGE_VAR_* secrets/URLs, substituted into config/*.yaml
+    environment:
+      # Required since v1.0 for any Host other than localhost:3000. Comma-separated,
+      # no spaces. Set it in .env to the exact `tailscale serve` name, e.g.
+      # homepage.tail1234.ts.net. Never use "*".
+      HOMEPAGE_ALLOWED_HOSTS: ${HOMEPAGE_ALLOWED_HOSTS:?set HOMEPAGE_ALLOWED_HOSTS in .env}
+      # Run as non-root; ./config must be owned by this uid/gid (see README).
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+    security_opt:
+      - no-new-privileges:true
+    # If tailnet names (hermes-aws.<tailnet>.ts.net, librenms...) do not resolve
+    # inside the container, uncomment to use Tailscale MagicDNS directly:
+    # dns:
+    #   - 100.100.100.100

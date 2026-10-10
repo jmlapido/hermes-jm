@@ -1,0 +1,33 @@
+---
+# https://gethomepage.dev/configs/settings/
+title: JM Ops
+description: JM NOC - PH homelab, Hermes on AWS
+theme: dark          # fixed theme, hides the switcher
+color: slate         # fixed palette: slate gray zinc neutral stone ... (see docs)
+headerStyle: boxedWidgets
+statusStyle: dot     # siteMonitor/ping shown as a dot instead of ms
+fullWidth: true
+hideVersion: false
+disableIndexing: true
+target: _blank       # open links in a new tab
+# background: /images/noc.jpg   # needs a ./images:/app/public/images mount + restart
+# cardBlur: sm
+
+# Group order follows this map. Keys must match group names in
+# services.yaml / bookmarks.yaml exactly.
+layout:
+  Infrastructure:
+    style: row
+    columns: 2
+  Network:
+    style: row
+    columns: 2
+  Websites:
+    style: row
+    columns: 1
+  Hermes:
+    style: row
+    columns: 3
+  Links:
+    style: row
+    columns: 5
