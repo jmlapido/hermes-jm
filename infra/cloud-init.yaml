@@ -1,0 +1,170 @@
+#cloud-config
+# Rendered by Terraform templatefile(). Template variables: region, tailscale_hostname.
+# Literal shell brace-expansions (dollar + {VAR}) must be escaped with a double dollar
+# sign for templatefile; plain $VAR needs no escaping.
+#
+# Bootstrap for Hermes Agent (Nous Research) on Ubuntu 24.04 arm64.
+# Logs: /var/log/cloud-init-output.log and /var/log/hermes-bootstrap.log
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - docker.io
+  - docker-compose-v2
+  - git
+  - jq
+  - curl
+  - unzip
+  - ca-certificates
+
+users:
+  - default
+  - name: hermes
+    gecos: Hermes Agent
+    shell: /bin/bash
+    groups: [docker]
+    lock_passwd: true
+
+write_files:
+  # ---------------------------------------------------------------------------
+  # Pull every parameter under /hermes/env/ from SSM Parameter Store and write
+  # it to /home/hermes/.hermes/.env as KEY=value. Keys not managed in SSM that
+  # already exist in .env (e.g. written by `hermes setup`) are preserved.
+  # ---------------------------------------------------------------------------
+  - path: /usr/local/bin/hermes-load-secrets
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      export PATH="/snap/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
+      REGION="${region}"
+      PREFIX="/hermes/env/"
+      HERMES_HOME="/home/hermes/.hermes"
+      ENV_FILE="$HERMES_HOME/.env"
+
+      umask 077
+      mkdir -p "$HERMES_HOME"
+      tmp_ssm="$(mktemp)"
+      tmp_out="$(mktemp)"
+      trap 'rm -f "$tmp_ssm" "$tmp_out"' EXIT
+
+      aws ssm get-parameters-by-path \
+        --region "$REGION" \
+        --path "$PREFIX" \
+        --recursive \
+        --with-decryption \
+        --output json \
+        | jq -r '.Parameters[] | "\(.Name | split("/") | last)=\(.Value)"' \
+        > "$tmp_ssm"
+
+      if [ ! -s "$tmp_ssm" ]; then
+        echo "hermes-load-secrets: no parameters found under $PREFIX in $REGION" >&2
+      fi
+
+      # Keep existing lines whose key is not managed by SSM.
+      if [ -f "$ENV_FILE" ]; then
+        awk -F= 'NR==FNR { managed[$1]=1; next } !($1 in managed)' \
+          "$tmp_ssm" "$ENV_FILE" > "$tmp_out"
+      fi
+
+      cat "$tmp_ssm" >> "$tmp_out"
+      install -m 600 -o hermes -g hermes "$tmp_out" "$ENV_FILE"
+      chown hermes:hermes "$HERMES_HOME"
+      echo "hermes-load-secrets: wrote $(wc -l < "$tmp_ssm") managed keys to $ENV_FILE"
+
+  # ---------------------------------------------------------------------------
+  # systemd unit for the Hermes messaging gateway (Discord, email, ...).
+  # NOTE: the hermes binary path depends on the installer. After bootstrap run
+  #   sudo -iu hermes which hermes
+  # and adjust ExecStart if it is not /home/hermes/.local/bin/hermes, then
+  #   systemctl daemon-reload && systemctl restart hermes-gateway
+  # ---------------------------------------------------------------------------
+  - path: /etc/systemd/system/hermes-gateway.service
+    permissions: "0644"
+    owner: root:root
+    content: |
+      [Unit]
+      Description=Hermes Agent gateway (Nous Research)
+      Wants=network-online.target
+      After=network-online.target tailscaled.service docker.service
+
+      [Service]
+      Type=simple
+      User=hermes
+      Group=hermes
+      WorkingDirectory=/home/hermes
+      Environment=HOME=/home/hermes
+      Environment=PATH=/home/hermes/.local/bin:/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      # "+" runs the pre-step as root so it can chown the .env file.
+      ExecStartPre=+/usr/local/bin/hermes-load-secrets
+      ExecStart=/home/hermes/.local/bin/hermes gateway
+      Restart=always
+      RestartSec=10
+      StartLimitIntervalSec=0
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /usr/local/sbin/hermes-bootstrap
+    permissions: "0755"
+    owner: root:root
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+      exec > >(tee -a /var/log/hermes-bootstrap.log) 2>&1
+      export PATH="/snap/bin:$PATH"
+      REGION="${region}"
+      TS_HOSTNAME="${tailscale_hostname}"
+
+      # --- AWS CLI v2 (the apt "awscli" package is not in Ubuntu 24.04) ---
+      if ! command -v aws >/dev/null 2>&1; then
+        snap install aws-cli --classic
+      fi
+
+      # --- Docker ---
+      systemctl enable --now docker
+      usermod -aG docker hermes
+
+      # --- Tailscale ---
+      if ! command -v tailscale >/dev/null 2>&1; then
+        curl -fsSL https://tailscale.com/install.sh | sh
+      fi
+      systemctl enable --now tailscaled
+
+      TS_AUTHKEY="$(aws ssm get-parameter \
+        --region "$REGION" \
+        --name /hermes/tailscale_authkey \
+        --with-decryption \
+        --query Parameter.Value \
+        --output text)"
+
+      # The auth key must be allowed to apply tag:hermes (tagOwners in the tailnet ACL).
+      tailscale up \
+        --authkey "$TS_AUTHKEY" \
+        --hostname "$TS_HOSTNAME" \
+        --advertise-tags=tag:hermes \
+        --ssh
+      unset TS_AUTHKEY
+
+      # --- Hermes Agent (installed as user hermes) ---
+      # The upstream installer may prompt; if it does, finish interactively with
+      #   sudo -iu hermes hermes setup
+      sudo -iu hermes bash -lc 'curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash' </dev/null || \
+        echo "WARN: Hermes installer exited non-zero; finish manually as user hermes"
+
+      # Verify where the binary landed (unit assumes /home/hermes/.local/bin/hermes).
+      sudo -iu hermes bash -lc 'which hermes' || echo "WARN: hermes not on PATH for user hermes"
+
+      # --- Secrets + gateway service ---
+      /usr/local/bin/hermes-load-secrets || echo "WARN: secret load failed (create /hermes/env/* params)"
+      systemctl daemon-reload
+      systemctl enable hermes-gateway.service
+      systemctl start hermes-gateway.service || echo "WARN: hermes-gateway failed to start; check journalctl -u hermes-gateway"
+
+runcmd:
+  - [ /usr/local/sbin/hermes-bootstrap ]
+
+final_message: "Hermes Agent bootstrap finished after $UPTIME seconds"
