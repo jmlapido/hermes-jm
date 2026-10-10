@@ -1,0 +1,67 @@
+// Tailscale policy for Hermes Agent (AWS EC2) managing a Proxmox VE home lab.
+// Paste into Admin console > Access controls. Default deny: anything not
+// granted below is blocked. Nothing grants access *to* tag:hermes except admins.
+{
+	"tagOwners": {
+		"tag:hermes":        ["autogroup:admin"], // Hermes Agent EC2 instance
+		"tag:proxmox":       ["autogroup:admin"], // PVE host
+		"tag:nms":           ["autogroup:admin"], // LibreNMS CT
+		"tag:subnet-router": ["autogroup:admin"], // CT advertising the home LAN
+	},
+
+	"grants": [
+		// Admins: full access everywhere.
+		{
+			"src": ["autogroup:admin"],
+			"dst": ["*"],
+			"ip":  ["*"],
+		},
+		// Hermes -> Proxmox API/GUI only (no SSH).
+		{
+			"src": ["tag:hermes"],
+			"dst": ["tag:proxmox"],
+			"ip":  ["tcp:8006"],
+		},
+		// Hermes -> LibreNMS web/API.
+		{
+			"src": ["tag:hermes"],
+			"dst": ["tag:nms"],
+			"ip":  ["tcp:443", "tcp:80"],
+		},
+		// Hermes -> home LAN via the subnet router: ping, SSH, HTTP(S), SNMP.
+		{
+			"src": ["tag:hermes"],
+			"dst": ["192.168.1.0/24"],
+			"ip":  ["icmp:*", "tcp:22", "tcp:80", "tcp:443", "udp:161"],
+		},
+	],
+
+	"ssh": [
+		// Admins may SSH into the Hermes host, with periodic re-authentication.
+		{
+			"action": "check",
+			"src":    ["autogroup:admin"],
+			"dst":    ["tag:hermes"],
+			"users":  ["hermes", "root"],
+		},
+	],
+
+	"autoApprovers": {
+		"routes": {
+			"192.168.1.0/24": ["tag:subnet-router"],
+		},
+	},
+
+	"tests": [
+		{
+			"src":    "tag:hermes",
+			"accept": ["tag:proxmox:8006", "tag:nms:443"],
+			"deny":   ["tag:proxmox:22", "tag:nms:22"],
+		},
+		{
+			// Managed nodes must not be able to reach Hermes.
+			"src":  "tag:proxmox",
+			"deny": ["tag:hermes:22", "tag:hermes:443"],
+		},
+	],
+}
