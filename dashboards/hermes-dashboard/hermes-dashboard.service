@@ -1,0 +1,54 @@
+# /etc/systemd/system/hermes-dashboard.service
+#
+# Hermes web dashboard (admin UI: config, API keys, sessions, logs, analytics, cron, skills,
+# MCP, channels) on hermes-aws. Bound to loopback only and published on the tailnet by
+# tailscale serve at https://hermes-aws.<tailnet>.ts.net:8443 (dashboards/tailscale-serve.sh).
+#
+# Auth: a 127.0.0.1 bind alone has no login. Because a reverse proxy (tailscale serve) puts
+# it on the tailnet, set HERMES_DASHBOARD_PUBLIC_URL; that engages the dashboard's auth gate
+# (and lets the Host header through the DNS-rebinding guard). With the gate on, the dashboard
+# refuses to start unless an auth provider is configured, so also set the
+# HERMES_DASHBOARD_BASIC_AUTH_* parameters in SSM (see docs/DASHBOARDS.md).
+#
+# Install:
+#   sudo install -m 644 /opt/hermes-jm/dashboards/hermes-dashboard/hermes-dashboard.service \
+#        /etc/systemd/system/hermes-dashboard.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now hermes-dashboard
+#   sudo journalctl -u hermes-dashboard -f
+#
+# Same binary path caveat as hermes-gateway.service: check with
+#   sudo -iu hermes which hermes
+# and adjust ExecStart if it is not /home/hermes/.local/bin/hermes.
+
+[Unit]
+Description=Hermes Agent web dashboard (loopback, published via tailscale serve)
+Wants=network-online.target
+After=network-online.target tailscaled.service hermes-gateway.service
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+WorkingDirectory=/home/hermes
+Environment=HOME=/home/hermes
+Environment=PATH=/home/hermes/.local/bin:/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+# Re-render ~/.hermes/.env from SSM (/hermes/env/*) so a dashboard restart picks up new
+# HERMES_DASHBOARD_* values. "+" runs it as root. Ordered after hermes-gateway so the two
+# pre-steps do not write the file at the same time on boot.
+ExecStartPre=+/usr/local/bin/hermes-load-secrets
+# Loaded after ExecStartPre has run; "-" = do not fail if missing.
+EnvironmentFile=-/home/hermes/.hermes/.env
+ExecStart=/home/hermes/.local/bin/hermes dashboard --host 127.0.0.1 --port 9119 --no-open
+Restart=on-failure
+RestartSec=10
+# Exit 78 (EX_CONFIG) = deliberate refusal (no auth provider, or another dashboard already
+# owns this host). Restarting would only loop; fix the config and start it again.
+RestartPreventExitStatus=78
+# Light hardening that does not get in the way of the dashboard writing ~/.hermes.
+NoNewPrivileges=true
+PrivateTmp=true
+# The Chat tab spawns a full Hermes TUI agent per session inside this cgroup.
+MemoryMax=768M
+
+[Install]
+WantedBy=multi-user.target

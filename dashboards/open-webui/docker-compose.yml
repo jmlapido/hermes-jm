@@ -1,0 +1,74 @@
+# Open WebUI as a chat front end for Hermes Agent, on the Hermes EC2 box (hermes-aws).
+#
+#   Browser (tailnet only) --https--> tailscale serve :443 --> 127.0.0.1:3000 Open WebUI
+#   Open WebUI --http--> 127.0.0.1:8642/v1 Hermes API server (part of `hermes gateway`)
+#
+# Networking choice: network_mode: host.
+#   The Hermes API server binds 127.0.0.1:8642 by default (API_SERVER_HOST). A container on
+#   the default bridge network reaches the host only through the bridge IP (172.17.0.1,
+#   which is what extra_hosts "host-gateway" resolves to), and the host's loopback is not
+#   reachable from there. The alternative would be API_SERVER_HOST=172.17.0.1, which
+#   exposes the agent (with terminal tools) to every container on the box and depends on
+#   docker0 existing before the gateway starts. With host networking both services stay on
+#   127.0.0.1 and nothing listens on a non-loopback address. Open WebUI is told to listen on
+#   127.0.0.1:3000 through HOST/PORT (read by the image's start.sh). `ports:` does not
+#   apply in host mode.
+#
+# Tools run on EC2: every chat here is a full Hermes agent run on hermes-aws (terminal,
+# skills, Proxmox, email, memory), the same brain as Discord. Open WebUI is only the UI.
+#
+# Usage (on the box, see docs/DASHBOARDS.md):
+#   cd /opt/hermes-jm/dashboards/open-webui && cp .env.example .env && $EDITOR .env
+#   docker compose up -d && docker compose logs -f
+#
+# Image pinned to v0.11.4 (latest release as of 2026-10-10). To upgrade, read the release
+# notes, bump the tag, then run: docker compose pull && docker compose up -d.
+
+name: open-webui
+
+services:
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:v0.11.4
+    container_name: open-webui
+    network_mode: host
+    restart: unless-stopped
+    # Secrets and per-host values (OPENAI_API_KEY, WEBUI_SECRET_KEY, WEBUI_URL, ...).
+    env_file: .env
+    environment:
+      # Listen on loopback only; tailscale serve publishes it to the tailnet.
+      HOST: 127.0.0.1
+      PORT: "3000"
+      # Hermes API server (OpenAI-compatible). Key comes from .env (= API_SERVER_KEY).
+      OPENAI_API_BASE_URL: http://127.0.0.1:8642/v1
+      ENABLE_OPENAI_API: "true"
+      ENABLE_OLLAMA_API: "false"
+      # Login is required. The first account created becomes admin. Open WebUI v0.11
+      # allows that first signup even with ENABLE_SIGNUP=false, so signup is closed from
+      # day one. Add more users from Admin Panel > Users.
+      WEBUI_AUTH: "true"
+      ENABLE_SIGNUP: "false"
+      DEFAULT_USER_ROLE: pending
+      # Served over HTTPS by tailscale serve.
+      WEBUI_SESSION_COOKIE_SECURE: "true"
+      WEBUI_AUTH_COOKIE_SECURE: "true"
+      # Privacy / noise.
+      ENABLE_COMMUNITY_SHARING: "false"
+      ANONYMIZED_TELEMETRY: "false"
+      DO_NOT_TRACK: "true"
+      SCARF_NO_ANALYTICS: "true"
+    volumes:
+      - open-webui-data:/app/backend/data
+    # t4g.medium has 4 GB shared with Hermes. Open WebUI idles at ~0.5-0.8 GB after the
+    # local embedding model (used for document uploads/RAG) is loaded. If the container is
+    # OOM-killed (docker inspect -f '{{.State.OOMKilled}}' open-webui), raise to 1g.
+    mem_limit: 768m
+    memswap_limit: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  open-webui-data:
+    name: open-webui-data
