@@ -17,6 +17,7 @@ packages:
   - curl
   - unzip
   - ca-certificates
+  - libatomic1 # needed by the Node.js runtime the Hermes installer bundles
 
 users:
   - default
@@ -90,6 +91,7 @@ write_files:
       Description=Hermes Agent gateway (Nous Research)
       Wants=network-online.target
       After=network-online.target tailscaled.service docker.service
+      StartLimitIntervalSec=0
 
       [Service]
       Type=simple
@@ -103,7 +105,6 @@ write_files:
       ExecStart=/home/hermes/.local/bin/hermes gateway
       Restart=always
       RestartSec=10
-      StartLimitIntervalSec=0
 
       [Install]
       WantedBy=multi-user.target
