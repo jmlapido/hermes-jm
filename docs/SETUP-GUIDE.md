@@ -110,7 +110,7 @@ sudo -iu hermes hermes doctor
 sudo -iu hermes hermes setup          # only if doctor says no model/provider is set
 sudo mkdir -p /opt/hermes-jm && sudo chown hermes:hermes /opt/hermes-jm
 sudo -iu hermes git clone https://github.com/jmlapido/hermes-jm.git /opt/hermes-jm
-sudo -iu hermes bash -c 'for d in /opt/hermes-jm/skills/*/; do ln -sfn "$d" ~/.hermes/skills/$(basename "$d"); done'
+sudo -u hermes -H bash -c 'for d in /opt/hermes-jm/skills/*/; do ln -sfn "${d%/}" ~/.hermes/skills/$(basename "$d"); done'  # not -i: it mangles $(...)
 sudo -iu hermes bash -c 'mkdir -p ~/.hermes/scripts ~/.hermes/state'
 sudo systemctl restart hermes-gateway
 ```

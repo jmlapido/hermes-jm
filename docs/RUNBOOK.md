@@ -115,7 +115,7 @@ sudo mkdir -p /opt/hermes-jm && sudo chown hermes:hermes /opt/hermes-jm
 sudo -iu hermes git clone https://github.com/<you>/hermes-jm.git /opt/hermes-jm
 
 # Option A - symlink (git pull updates skills in place; preferred)
-sudo -iu hermes bash -c 'for d in /opt/hermes-jm/skills/*/; do ln -sfn "$d" ~/.hermes/skills/$(basename "$d"); done'
+sudo -u hermes -H bash -c 'for d in /opt/hermes-jm/skills/*/; do ln -sfn "${d%/}" ~/.hermes/skills/$(basename "$d"); done'  # not -i: it mangles $(...)
 
 # Option B - copy (frozen snapshot)
 sudo -iu hermes bash -c 'cp -r /opt/hermes-jm/skills/* ~/.hermes/skills/'
