@@ -39,7 +39,7 @@ resource "aws_dlm_lifecycle_policy" "daily" {
       create_rule {
         interval      = 24
         interval_unit = "HOURS"
-        times         = ["18:00"] # UTC = 02:00 Singapore / Manila
+        times         = ["22:00"] # UTC = 02:00 Asia/Dubai (UAE)
       }
 
       retain_rule {

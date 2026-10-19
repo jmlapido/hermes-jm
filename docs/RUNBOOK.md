@@ -300,7 +300,7 @@ PVE host, and/or remove `tag:hermes` grants in the Tailscale ACL.
 
 ### Backup / restore (DLM snapshots)
 
-- DLM takes a daily snapshot of the root volume at 18:00 UTC (02:00 Manila), keeps 7.
+- DLM takes a daily snapshot of the root volume at 22:00 UTC (02:00 Dubai), keeps 7.
 - **Restore whole box:** EC2 console -> Snapshots (tag from the DLM policy) -> Create
   volume in the same AZ -> stop instance -> detach current root (`/dev/sda1`) -> attach
   restored volume as `/dev/sda1` -> start. Or create an AMI from the snapshot and point
