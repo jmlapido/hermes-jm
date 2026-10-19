@@ -1,5 +1,12 @@
 data "aws_availability_zones" "available" {
   state = "available"
+
+  # Regular AZs only: skip Local Zones (e.g. ap-southeast-1-mnl-1a), which sort
+  # first when opted in and don't support gp3 root volumes.
+  filter {
+    name   = "zone-type"
+    values = ["availability-zone"]
+  }
 }
 
 # Latest Ubuntu 24.04 LTS (Noble) arm64 from Canonical.
