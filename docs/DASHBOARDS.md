@@ -317,7 +317,7 @@ Secrets stay in `.env` as `HOMEPAGE_VAR_*` and are referenced as `{{HOMEPAGE_VAR
 |---|---|
 | Hermes gateway (Discord + API server + cron) | 0.3-0.6 GB, more during runs |
 | Open WebUI (incl. local embedding model) | 0.5-1 GB (capped at 1 GB) |
-| Hermes dashboard (+ Chat tab sessions) | 0.15-0.5 GB (capped at 1 GB) |
+| Hermes dashboard (+ Chat tab sessions) | 0.15-0.5 GB (capped at 768 MB) |
 | career-ops Playwright runs (daily) | up to ~1 GB for a few minutes |
 
 That fits, but without much headroom. Watch it for the first week:
