@@ -8,13 +8,15 @@ terraform {
     }
   }
 
-  # Optional: remote state. Uncomment and fill in to keep state in S3.
-  # backend "s3" {
-  #   bucket       = "my-tfstate-bucket"
-  #   key          = "hermes-agent/terraform.tfstate"
-  #   region       = "ap-southeast-1"
-  #   use_lockfile = true
-  # }
+  # Remote state in a private, versioned, encrypted S3 bucket (S3-native locking).
+  # To keep state local instead, delete this block and run `terraform init -migrate-state`.
+  backend "s3" {
+    bucket       = "hermes-jm-tfstate-296aecc3"
+    key          = "hermes-agent/terraform.tfstate"
+    region       = "ap-southeast-1"
+    encrypt      = true
+    use_lockfile = true
+  }
 }
 
 provider "aws" {
