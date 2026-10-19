@@ -134,6 +134,8 @@ write_files:
       fi
       systemctl enable --now tailscaled
 
+      # Keep the auth key out of the xtrace log.
+      set +x
       TS_AUTHKEY="$(aws ssm get-parameter \
         --region "$REGION" \
         --name /hermes/tailscale_authkey \
@@ -148,6 +150,7 @@ write_files:
         --advertise-tags=tag:hermes \
         --ssh
       unset TS_AUTHKEY
+      set -x
 
       # --- Hermes Agent (installed as user hermes) ---
       # The upstream installer may prompt; if it does, finish interactively with
