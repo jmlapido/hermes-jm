@@ -60,8 +60,9 @@ services:
       - open-webui-data:/app/backend/data
     # t4g.medium has 4 GB shared with Hermes. Open WebUI idles at ~0.5-0.8 GB after the
     # local embedding model (used for document uploads/RAG) is loaded. If the container is
-    # OOM-killed (docker inspect -f '{{.State.OOMKilled}}' open-webui), raise to 1g.
-    mem_limit: 768m
+    # OOM-killed (docker inspect -f '{{.State.OOMKilled}}' open-webui) - 768m was too small on
+    # first start (embedding model load), so 1g is the default now.
+    mem_limit: 1g
     memswap_limit: 1g
     logging:
       driver: json-file

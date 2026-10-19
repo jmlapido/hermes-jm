@@ -117,7 +117,7 @@ How it is wired (see the header of `docker-compose.yml`):
   both on loopback, so we never bind the agent API to a Docker bridge.
 - Image pinned to `ghcr.io/open-webui/open-webui:v0.11.4`. To upgrade, read the release notes,
   bump the tag, then `docker compose pull && docker compose up -d`.
-- `mem_limit: 768m`, Ollama off, login on, signup off, cookies `Secure`.
+- `mem_limit: 1g`, Ollama off, login on, signup off, cookies `Secure`.
 
 **First login:** after `tailscale serve` (step 4), open `https://hermes-aws.<tailnet>.ts.net`
 and **create your account straight away**. The first account becomes admin. Signup is
@@ -316,8 +316,8 @@ Secrets stay in `.env` as `HOMEPAGE_VAR_*` and are referenced as `{{HOMEPAGE_VAR
 | Process | RAM |
 |---|---|
 | Hermes gateway (Discord + API server + cron) | 0.3-0.6 GB, more during runs |
-| Open WebUI (incl. local embedding model) | 0.5-1 GB (capped at 768 MB) |
-| Hermes dashboard (+ Chat tab sessions) | 0.15-0.5 GB (capped at 768 MB) |
+| Open WebUI (incl. local embedding model) | 0.5-1 GB (capped at 1 GB) |
+| Hermes dashboard (+ Chat tab sessions) | 0.15-0.5 GB (capped at 1 GB) |
 | career-ops Playwright runs (daily) | up to ~1 GB for a few minutes |
 
 That fits, but without much headroom. Watch it for the first week:
@@ -342,7 +342,7 @@ stop/start of a few minutes.
 | `https://hermes-aws...` does not load | `tailscale status` on your device; `sudo dashboards/tailscale-serve.sh status`; HTTPS certificates enabled in the tailnet; ACL applied; first request after enabling can take ~1 min while the cert is issued |
 | Open WebUI: no models in the picker | `curl -s http://127.0.0.1:8642/health` on the box (API server enabled? gateway restarted?); Admin Panel > Settings > Connections: URL `http://127.0.0.1:8642/v1` (with `/v1`), key = `API_SERVER_KEY` |
 | Open WebUI: "Invalid API key" / 401 | key in Open WebUI's **Connections** (database), not `.env`, must match `API_SERVER_KEY` |
-| Open WebUI keeps restarting | `docker compose logs --tail 100`; `docker inspect -f '{{.State.OOMKilled}}' open-webui` -> raise `mem_limit` to `1g` |
+| Open WebUI keeps restarting | `docker compose logs --tail 100`; `docker inspect -f '{{.State.OOMKilled}}' open-webui` -> raise `mem_limit` above `1g` or resize the instance |
 | Open WebUI slow first answer | normal: Hermes may run several tools before replying; progress lines stream in the chat |
 | Lost the Open WebUI admin password | `docker exec -it open-webui ...` per the Open WebUI docs ("Reset admin password"), or as a last resort `docker compose down && docker volume rm open-webui-data` (loses chats) |
 | Dashboard unit exits with status 78 | auth gate on but no provider: check `HERMES_DASHBOARD_BASIC_AUTH_*` are in `~/.hermes/.env`; or another `hermes dashboard` already runs (`pgrep -af 'hermes dashboard'`) |
