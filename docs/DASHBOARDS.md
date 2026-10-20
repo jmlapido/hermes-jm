@@ -179,6 +179,23 @@ The script is idempotent. Re-run it any time. It configures:
 It never enables Funnel, and switches Funnel off on these ports if it finds it on.
 `sudo .../tailscale-serve.sh status` shows the config. `... off` removes it.
 
+### 4b. Hermes Desktop app (optional)
+
+The desktop app connects to the same backend as the admin dashboard (`hermes dashboard` is a
+`hermes serve` backend with the web UI on top), so nothing extra runs on EC2. On a device with
+Tailscale on:
+
+1. Desktop app > **Settings > Gateways** (Ctrl/Cmd+, ) > **Registered gateways** > **Add connection**.
+2. Kind **Remote gateway**, name e.g. `hermes-aws`.
+3. **Gateway URL:** `https://hermes-aws.<tailnet>.ts.net:8443` (https, no trailing path).
+4. **Sign in** with the dashboard username/password (`HERMES_DASHBOARD_BASIC_AUTH_*`).
+5. **Save connection**, then **Test** (must say *Reachable*: it checks HTTP and the `/api/ws`
+   WebSocket). Optionally **Make primary**.
+
+Do not bind the backend to `0.0.0.0` or the Tailscale IP as the upstream desktop docs suggest:
+`tailscale serve` already gives the app HTTPS on the tailnet while the backend stays on loopback.
+The app's local "This device" gateway stays available; chats on `hermes-aws` run on EC2.
+
 ### 5. Homepage NOC (Proxmox LXC)
 
 Follow [`dashboards/homepage/README.md`](../dashboards/homepage/README.md): CT + Docker +
